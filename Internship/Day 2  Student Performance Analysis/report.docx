@@ -1,0 +1,802 @@
+Excellent! This is exactly the right way to learn. Instead of memorizing the code, let's understand **what each line is doing** in very simple words.
+
+---
+
+# 1. Correlation Dictionary
+
+```python
+correlations = {
+    "reading score": corr1,
+}
+```
+
+### What is happening?
+
+Suppose you already calculated:
+
+```python
+corr1 = 0.82
+```
+
+Now this code creates a **dictionary**.
+
+The dictionary looks like this:
+
+```python
+{
+    "reading score": 0.82
+}
+```
+
+Think of it as a label and its value.
+
+```
+reading score  -------> 0.82
+```
+
+If you had more correlations:
+
+```python
+correlations = {
+    "reading score": 0.82,
+    "writing score": 0.91,
+    "attendance": 0.68
+}
+```
+
+Now Python knows every correlation.
+
+---
+
+## Next line
+
+```python
+highest = max(correlations, key=correlations.get)
+```
+
+This is the most confusing line for beginners.
+
+Let's simplify it.
+
+Python looks at
+
+```
+reading score → 0.82
+writing score → 0.91
+attendance → 0.68
+```
+
+It asks
+
+> Which value is biggest?
+
+The biggest is
+
+```
+0.91
+```
+
+So Python returns its key
+
+```
+writing score
+```
+
+Therefore
+
+```python
+highest
+```
+
+becomes
+
+```
+writing score
+```
+
+Then
+
+```python
+print(highest)
+```
+
+prints
+
+```
+writing score
+```
+
+---
+
+# 2. Histogram
+
+```python
+plt.figure(figsize=(6,4))
+```
+
+This creates a blank graph.
+
+Size:
+
+```
+Width = 6
+
+Height = 4
+```
+
+Nothing is drawn yet.
+
+---
+
+Next
+
+```python
+plt.hist(df["math score"], bins=8)
+```
+
+Suppose scores are
+
+```
+50
+55
+60
+61
+63
+70
+72
+80
+81
+85
+90
+```
+
+Python groups them into **8 ranges (bins)**.
+
+Example
+
+```
+50-55
+
+56-61
+
+62-67
+
+68-73
+
+74-79
+
+80-85
+
+86-91
+```
+
+Then it counts
+
+```
+How many students are inside each range?
+```
+
+Finally it draws bars.
+
+Histogram means
+
+```
+Score Range
+
+↓
+
+Number of Students
+```
+
+---
+
+Next
+
+```python
+plt.xlabel("Math Score")
+```
+
+Writes
+
+```
+Math Score
+```
+
+under the graph.
+
+---
+
+```python
+plt.ylabel("Frequency")
+```
+
+Writes
+
+```
+Frequency
+```
+
+on the left side.
+
+Frequency means
+
+```
+How many students
+```
+
+---
+
+```python
+plt.title("Histogram of Math Scores")
+```
+
+Adds the graph title.
+
+---
+
+```python
+plt.savefig("images/histogram.png")
+```
+
+Saves the graph as
+
+```
+histogram.png
+```
+
+inside
+
+```
+images/
+```
+
+---
+
+```python
+plt.show()
+```
+
+Displays the graph on the screen.
+
+---
+
+# 3. Probability
+
+```python
+score80 = (df["math score"] >= 80).mean()
+```
+
+This is a clever trick.
+
+Suppose
+
+```
+Math Scores
+
+90
+
+82
+
+60
+
+75
+
+81
+```
+
+Python first checks
+
+```
+>=80 ?
+```
+
+Result
+
+```
+90 ✔ True
+
+82 ✔ True
+
+60 ✘ False
+
+75 ✘ False
+
+81 ✔ True
+```
+
+Now it becomes
+
+```
+True
+
+True
+
+False
+
+False
+
+True
+```
+
+Python treats
+
+```
+True = 1
+
+False = 0
+```
+
+So it becomes
+
+```
+1
+
+1
+
+0
+
+0
+
+1
+```
+
+Mean
+
+```
+(1+1+0+0+1)/5
+
+=
+
+3/5
+
+=
+
+0.6
+```
+
+So
+
+```
+60%
+```
+
+of students scored at least 80.
+
+---
+
+# 4. Z-Score
+
+```python
+df["Z_Score"] = stats.zscore(df["math score"])
+```
+
+Suppose
+
+Average
+
+```
+70
+```
+
+Standard deviation
+
+```
+10
+```
+
+Student score
+
+```
+90
+```
+
+Formula
+
+```
+Z
+
+=
+
+(Score-Mean)
+
+/
+
+Std
+```
+
+```
+(90-70)/10
+
+=
+
+2
+```
+
+Means
+
+This student is
+
+```
+2 standard deviations above average.
+```
+
+Python calculates this for **every student**.
+
+Now your table becomes
+
+| Gender | Math Score | Z Score |
+| ------ | ---------- | ------- |
+| Male   | 90         | 2.0     |
+| Female | 70         | 0.0     |
+| Male   | 60         | -1.0    |
+
+---
+
+Next
+
+```python
+print(df[["gender","math score","Z_Score"]])
+```
+
+Only prints these three columns.
+
+---
+
+# 5. Outliers using Z-score
+
+```python
+outliers_z = df[abs(df["Z_Score"]) > 2]
+```
+
+This says
+
+```
+Take students whose
+
+absolute Z-score
+
+>
+
+2
+```
+
+What does `abs()` mean?
+
+Suppose
+
+```
+2.5
+
+-2.5
+```
+
+Absolute value removes the sign.
+
+```
+abs(2.5)=2.5
+
+abs(-2.5)=2.5
+```
+
+Both are unusual.
+
+Python keeps only those students.
+
+---
+
+# 6. Quartiles
+
+```python
+Q1 = df["math score"].quantile(0.25)
+```
+
+Means
+
+Find
+
+```
+25% point
+```
+
+---
+
+```python
+Q3 = df["math score"].quantile(0.75)
+```
+
+Means
+
+Find
+
+```
+75% point
+```
+
+---
+
+Suppose
+
+```
+Scores
+
+40
+
+50
+
+60
+
+70
+
+80
+
+90
+
+100
+```
+
+Q1
+
+```
+55
+```
+
+Q3
+
+```
+85
+```
+
+---
+
+# IQR
+
+```python
+IQR = Q3 - Q1
+```
+
+Suppose
+
+```
+85-55
+
+=
+
+30
+```
+
+IQR means
+
+```
+Middle spread
+```
+
+---
+
+# Lower Bound
+
+```python
+lower = Q1 - 1.5 * IQR
+```
+
+Suppose
+
+```
+55
+
+-
+
+1.5×30
+
+=
+
+10
+```
+
+---
+
+Upper Bound
+
+```python
+upper = Q3 + 1.5 * IQR
+```
+
+```
+85
+
++
+
+45
+
+=
+
+130
+```
+
+---
+
+Now Python checks
+
+```python
+outliers = df[
+    (df["math score"] < lower) |
+    (df["math score"] > upper)
+]
+```
+
+This means
+
+Keep students whose score is
+
+```
+less than 10
+
+OR
+
+greater than 130
+```
+
+If your scores are between 0 and 100, there may be no outliers. If a score falls outside the calculated bounds, it will be selected.
+
+The `|` symbol means **OR**.
+
+---
+
+# 7. Box Plot
+
+```python
+plt.boxplot(df["math score"])
+```
+
+This draws
+
+```
+      ○  ← Outlier
+
+ ────────
+│        │
+│        │
+│────────│ ← Median
+│        │
+│        │
+ ────────
+
+ │
+
+ │
+
+```
+
+The box plot shows
+
+* Median
+* Q1
+* Q3
+* Outliers
+
+---
+
+# 8. Project Summary
+
+```python
+print("========= PROJECT SUMMARY =========")
+```
+
+Prints
+
+```
+========= PROJECT SUMMARY =========
+```
+
+---
+
+```python
+print(f"Mean Math Score: {mean:.2f}")
+```
+
+Suppose
+
+```
+mean
+
+=
+
+72.3456
+```
+
+`.2f` means
+
+```
+show only two decimal places
+```
+
+Output
+
+```
+72.35
+```
+
+---
+
+```python
+print(f"Passing Probability: {passed:.2%}")
+```
+
+Suppose
+
+```
+passed
+
+=
+
+0.85
+```
+
+`.2%` converts it to a percentage with two decimal places.
+
+Output
+
+```
+85.00%
+```
+
+---
+
+```python
+print(f"Highest Correlation: {highest}")
+```
+
+Prints
+
+```
+Highest Correlation:
+
+reading score
+```
+
+or whichever variable has the highest correlation.
+
+---
+
+```python
+print(f"Number of Outliers: {len(outliers)}")
+```
+
+`len()` means:
+
+> **Count how many rows are in `outliers`.**
+
+For example, if `outliers` contains:
+
+| Math Score |
+| ---------- |
+| 10         |
+| 99         |
+
+Then:
+
+```python
+len(outliers)
+```
+
+returns:
+
+```text
+2
+```
+
+So the output will be:
+
+```text
+Number of Outliers: 2
+```
+
+## A key point to remember
+
+As you learn more Python, you'll notice a pattern:
+
+* **Pandas** is used to **read, filter, and manipulate data** (`df["math score"]`, `.mean()`, `.quantile()`).
+* **SciPy** performs **statistical calculations** (`stats.zscore()`).
+* **Matplotlib** creates **graphs** (`plt.hist()`, `plt.boxplot()`, `plt.show()`).
+* **Built-in Python functions** such as `max()`, `abs()`, and `len()` help you work with the results.
+
+Once you recognize which library each line belongs to, understanding new code becomes much easier.

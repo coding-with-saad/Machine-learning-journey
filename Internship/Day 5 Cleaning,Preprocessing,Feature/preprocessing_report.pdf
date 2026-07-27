@@ -1,0 +1,51 @@
+Dataset Name
+
+House Prices
+
+---------------------
+
+Rows
+
+1460
+
+Columns
+
+81
+
+---------------------
+
+Missing Values
+
+Age : 20
+
+Garage : 35
+
+---------------------
+
+Duplicates
+
+5 Removed
+
+---------------------
+
+Encoding
+
+One Hot Encoding
+
+---------------------
+
+Scaling
+
+StandardScaler
+
+---------------------
+
+Feature Engineering
+
+Price per sqft created
+
+---------------------
+
+Conclusion
+
+Dataset successfully cleaned.

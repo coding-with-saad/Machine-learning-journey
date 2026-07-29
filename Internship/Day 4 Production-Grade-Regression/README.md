@@ -67,7 +67,7 @@ The following visualizations were generated on the cleaned dataset (`df_clean`):
 ### 6. Key Observations (fill in after reviewing your graphs)
 - Trip duration is right-skewed; log transform produces a more normal-shaped distribution.
 - [Add your own observation: e.g., which hours have longer trip durations]
-- [Add your own observation: e.g., peak trip volume hours]
+- [In 7pm to 8pm Number of Trips per Hour is Increase Approximetly 32000/33000 ]
 - [Add your own observation: e.g., correlation between distance and duration]
 
 ---

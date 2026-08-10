@@ -1,0 +1,211 @@
+================================================================================
+                    		INTERNSHIP
+                           WEEK 5 PROGRESS REPORT
+================================================================================
+Reporting Period : Week 4 (August 2026)
+Intern Name      : Malik Saad Khawar
+Department       : AI and ML Intern
+Focus Areas      : Production-Grade Regression & Advanced Customer Segmentation
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+1. Executive Summary
+2. Project 1: NYC Taxi ETA Prediction (Advanced Regression)
+   2.1. Business Problem & Objective
+   2.2. Data Cleaning & Preprocessing
+   2.3. Deployment-Safe Feature Engineering
+   2.4. Model Performance & Evaluation Leaderboard
+   2.5. Leakage Experiment & Critical Insights
+   2.6. Subgroup Error Analysis
+   2.7. Project Limitations & Future Recommendations
+3. Project 2: Customer Personality Profiling & Segmentation
+   3.1. Business Objective
+   3.2. Data Quality Audit & Cleansing Protocol
+   3.3. Clustering Methodology & Technical Evaluation
+   3.4. Identified Customer Segments Summary
+   3.5. Customer Persona Cards
+   3.6. Strategic Marketing Recommendations
+4. Conclusion & Week 5 Outlook
+
+================================================================================
+1. EXECUTIVE SUMMARY
+================================================================================
+During Week 4, the internship work was split between two primary machine learning
+workflows:
+1. Build a production-ready, deployment-safe regression pipeline to predict taxi
+   trip durations (ETAs) at the moment of request using NYC TLC Yellow Taxi data.
+2. Build an end-to-end customer clustering and persona profiling model on the
+   Kaggle Customer Personality dataset to enable targeted marketing.
+
+Key achievements include:
+- Designed an advanced GBDT regression model incorporating historical out-of-fold
+  medians that achieved a validation Mean Absolute Error (MAE) of 5.83 minutes,
+  safely avoiding feature leakage.
+- Cleaned, preprocessed, and segmented 2,232 customer profiles into four distinct
+  groups using PCA and K-Means. Crafted tailored persona cards and actionable
+  marketing recommendations for each segment.
+
+================================================================================
+2. PROJECT 1: NYC TAXI ETA PREDICTION (ADVANCED REGRESSION)
+================================================================================
+
+2.1. Business Problem & Objective
+The goal is to estimate trip duration (in minutes) at the moment a passenger
+requests a ride (before pickup). Errors carry asymmetrical business costs:
+- Underprediction (ETA is too short): Passenger arrives late, hurting trust.
+- Overprediction (ETA is too long): Passenger cancels or switches to competitors.
+To be deployable, the model must only use features known *before* the trip starts.
+
+2.2. Data Cleaning & Preprocessing
+Using a 500,000-row development sample of NYC TLC Yellow Taxi records (Jan 2023):
+- Original Rows: 500,000
+- Cleaned Rows : 494,634
+- Removed Rows : 5,366 (filtered for duration 1-180 mins, distance > 0, passenger > 0)
+- Target: Trip duration in minutes. Log transformation was used for linear models.
+
+2.3. Deployment-Safe Feature Engineering
+Created 14 deployment-safe features:
+- Time Features: pickup_hour, pickup_month, pickup_dayofweek, is_weekend,
+  is_peak_hour, is_night.
+- Cyclical Features: hour_sin, hour_cos.
+- Geographic Features: same_borough, is_pickup_manhattan, is_airport_route,
+  route_pair.
+- Interaction Features: pickup_zone_hour, weekend_borough.
+- Historical Out-of-Fold Aggregates: route_median_duration, hour_route_median.
+  These calculate historical averages on training folds only to prevent leakage.
+
+2.4. Model Performance & Evaluation Leaderboard
+Models were evaluated on Validation Mean Absolute Error (MAE):
+
++-------------------------------------------------------------+---------------+
+| Model Description                                           | MAE (Minutes) |
++-------------------------------------------------------------+---------------+
+| Baseline: Hour+Route Median (Pure Memorization Table)       | 4.186         |
+| Gradient Boosting + Historical Features (Champion Model)    | 5.831         |
+| Random Forest Regressor                                     | 6.050         |
+| Gradient Boosting Regressor (Without Historical Features)   | 6.491         |
+| Decision Tree Regressor                                     | 7.013         |
+| Ridge Regression                                            | 7.262         |
+| Linear Regression                                           | 7.264         |
+| Elastic Net Regression                                      | 7.593         |
+| Lasso Regression                                            | 7.596         |
+| Oracle Model (Uses post-trip features - NOT DEPLOYABLE)     | 2.300         |
++-------------------------------------------------------------+---------------+
+
+2.5. Leakage Experiment & Critical Insights
+- The Oracle Model (using post-trip details like fare, tip, and actual distance)
+  reaches an MAE of 2.30, but cannot be deployed. The Safe Model (MAE 5.83) is
+  the true deployable GBDT champion.
+- The Hour+Route Median Baseline (MAE 4.19) performs exceptionally well but cannot
+  generalize. If a route has no historical records, the baseline fails. The GBDT
+  Champion Model (MAE 5.83) combines historical averages with contextual features,
+  allowing it to generalize to unseen route/hour combinations.
+- Permutation importance confirms "hour_route_median" is the dominant feature
+  (importance 1.261), followed by "pickup_dayofweek" (0.046).
+
+2.6. Subgroup Error Analysis
+- Temporal: Error is lowest overnight (~4.0 min, low traffic) and highest during
+  commute rush hours (~7.0 min, high congestion).
+- Route Type: Airport trips have double the error of non-airport trips (MAE 10.25
+  vs 5.20 min) due to longer distances and high highway congestion variability.
+- Geographic Outliers (Staten Island): Showed an MAE of 148.0 mins. Investigation
+  showed this was a sample-size artifact: only 1 Staten Island trip (a 162-minute
+  outlier) existed in the test set.
+
+2.7. Project Limitations & Future Recommendations
+- Perform formal hyperparameter tuning (Optuna, GridSearch) to narrow the gap
+  with the baseline.
+- Expand data from the 500K sample to a larger multi-month 1M+ dataset.
+- Ingest real-time weather and traffic API data.
+- Run local SHAP explanations for individual trips.
+
+================================================================================
+3. PROJECT 2: CUSTOMER PERSONALITY PROFILING & SEGMENTATION
+================================================================================
+
+3.1. Business Objective
+The goal is to segment 2,240 customers based on demographics, purchase histories,
+and campaign responses to enable targeted, high-ROI marketing and CRM workflows.
+
+3.2. Data Quality Audit & Cleansing Protocol
+Cleaned raw data anomalies to ensure high-fidelity clustering:
+- Missing Income: 24 missing values filled with the column median.
+- Joke Marital Statuses: Merged 'Alone' (3) into 'Single'. Removed joke entries
+  like 'Absurd' (2) and 'YOLO' (2).
+- Outliers: Removed 3 age outliers (birth years 1893, 1899, 1900) and 1 fake
+  income outlier ($666,666).
+- Constant Columns: Dropped Z_CostContact (always 3) and Z_Revenue (always 11).
+- Final Cleaned Count: 2,232 customer records.
+
+3.3. Technical Clustering Methodology
+- Data was scaled using StandardScaler.
+- Dimensionality reduction was performed using Principal Component Analysis (PCA)
+  to project features into lower-dimensional space.
+- K-Means Clustering was applied. The optimal cluster count (k = 4) was selected
+  via the Elbow Method and Silhouette Analysis.
+
+3.4. Identified Customer Segments Summary
+
++----+----------------------------+-------+---------+------------+----------+------------+-----------+--------+
+| ID | Segment Name               | Size  | Avg Age | Avg Income | Fam Size | Avg Spend  | Avg Purch | Resp % |
++----+----------------------------+-------+---------+------------+----------+------------+-----------+--------+
+|  0 | Value-Conscious Families   |  575  |  48.6   |  $58,716   |   2.78   |  $789.72   |   21.72   |  13.0% |
+|  1 | Discount-Driven Families   |  462  |  49.9   |  $43,146   |   3.61   |  $126.69   |    9.39   |   6.1% |
+|  2 | Premium Loyal Customers    |  555  |  45.5   |  $76,258   |   1.79   | $1,399.77  |   20.77   |  29.0% |
+|  3 | Young Digital Browsers     |  640  |  38.2   |  $31,104   |   2.41   |   $97.29   |    7.54   |  10.6% |
++----+----------------------------+-------+---------+------------+----------+------------+-----------+--------+
+
+3.5. Customer Persona Cards
+
+Cluster 0: Amara, the Value-Conscious Planner
+- Profile: Avg 48.6 yrs old; Married with 1 child. Mid-to-High income (~$58.7K/yr).
+- Habits : High purchase volume (21.7 purchases) but heavily discount-driven (avg
+           3.73 discount purchases, highest of all clusters).
+- Channels: Multi-channel (web, catalog, store) but strictly promo-responsive.
+- Action : Offer loyalty rewards points on repeat purchases + bundle discounts.
+
+Cluster 1: Bilal, the Budget-Focused Family Man
+- Profile: Avg 49.9 yrs old; Married with ~2 children (largest family size, 3.61).
+- Habits : Lower-Mid income (~$43.1K/yr) and very low spend (~$126.69) due to high
+           dependents. Low marketing interest (86% campaign resistance).
+- Channels: Prefers brick-and-mortar stores.
+- Action : Target with family-sized value bundles and clear, budget-friendly offers.
+
+Cluster 2: Sana, the Premium Loyalist
+- Profile: Avg 45.5 yrs old; Married/Relationship, small household (1.79, no kids).
+- Habits : High income (~$76.3K/yr); spends double any other group (~$1,399.77).
+           Extremely high response to campaigns (29%).
+- Channels: Prefers catalog and physical store purchases; rarely browses the web.
+- Action : VIP early-access, personalized premium catalogs, luxury loyalty perks.
+
+Cluster 3: Zain, the Young Digital Browser
+- Profile: Avg 38.2 yrs old (youngest segment); Single/Mixed, early career (~$31.1K).
+- Habits : Visits website the most (6.6 visits/month) but has the lowest conversion
+           to sales (lowest spend: ~$97.29).
+- Channels: Highly web-oriented.
+- Action : Automated digital nurture flows, first-purchase promo codes, app invites.
+
+3.6. Strategic Marketing Recommendations
+- Profit Protection: Prioritize retaining Cluster 2 (Sana). They generate the
+  bulk of profits and are highly responsive to premium marketing.
+- Promotional Spend Optimization: Direct discount mailers to Cluster 0 (Amara).
+  They convert on deals without devaluing premium products for high-income groups.
+- Growth Nurturing: Set up automated, low-cost digital campaigns for Cluster 3 (Zain)
+  to build brand affinity as their income grows.
+
+================================================================================
+4. CONCLUSION & WEEK 5 OUTLOOK
+================================================================================
+Week 4 successfully established a pipeline for regression-based ETA predictions
+and customer demographic segmentation. Both projects align ML metrics with concrete
+business outcomes.
+
+Roadmap for Week 5:
+1. Optimize the GBDT model's hyperparameters on the full dataset.
+2. Export customer clusters to CRM tables for real-world marketing testing.
+3. Evaluate Deep Learning (MLP) baselines against the Champion Regression model.
+
+================================================================================
+Report Compiled by Malik Saad Khawar, AI and Machine Learning Intern.
+================================================================================
